@@ -1,116 +1,128 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
 using AdventOfCode2024.Util;
 
 namespace AdventOfCode2024.Day2;
 
 public class Day2Problems : Problems
 {
-  private static readonly Regex RedRegex = new("(\\d+) red", RegexOptions.Compiled);
-  private static readonly Regex BlueRegex = new("(\\d+) blue", RegexOptions.Compiled);
-  private static readonly Regex GreenRegex = new("(\\d+) green", RegexOptions.Compiled);
-
-  protected override string TestInput => @"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+  protected override string TestInput => @"7 6 4 2 1
+1 2 7 8 9
+9 7 6 2 1
+1 3 2 4 5
+8 6 4 4 1
+1 3 6 7 9
+8 9 8 7 6 5 4";
 
   protected override int Day => 2;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    return CalculateTotalPossibleGames(input).ToString();
+    var safeReports = 0;
+    foreach (var line in input)
+    {
+      var report = StringUtils.ExtractIntsFromString(line).ToArray();
+      if(IsReportSafe(report)) safeReports++;
+    }
+    return safeReports.ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    return CalculateTotalMinCubePower(input).ToString();
-  }
-
-  private static int CalculateTotalPossibleGames(string[] input)
-  {
-    var idSum = 0;
-    const int totalRed = 12;
-    const int totalBlue = 14;
-    const int totalGreen = 13;
-
-    foreach (var inputLine in input)
+    var safeReports = 0;
+    var reportedSafeLines = new StringBuilder();
+    foreach (var line in input)
     {
-      var newGame = new CubeGame(inputLine);
-      if (newGame.IsPossible(totalRed, totalBlue, totalGreen)) idSum += newGame.Id;
-    }
-      
-    return idSum;
-  }
-    
-  private static int CalculateTotalMinCubePower(string[] input)
-  {
-    var sum = 0;
-
-    foreach (var inputLine in input)
-    {
-      var newGame = new CubeGame(inputLine);
-      sum += newGame.CalculateMinimumCubePower();
-    }
-      
-    return sum;
-  }
-
-  private class CubeGame
-  {
-    public int Id { get; }
-    public List<GameResult> Results { get; }
-
-    public CubeGame(string rawInput)
-    {
-      var parts = rawInput.Split(':');
-      var rawId = parts[0].Replace("Game ", "");
-      Id = int.Parse(rawId);
-
-      var rawResults = parts[1].Split(';');
-      Results = rawResults.Select(s => new GameResult(s)).ToList();
-    }
-      
-    public bool IsPossible(int redTotal, int blueTotal, int greenTotal)
-    {
-      return Results.All(r => r.IsPossible(redTotal, blueTotal, greenTotal));
-    }
-
-    public int CalculateMinimumCubePower()
-    {
-      var minRed = 0;
-      var minBlue = 0;
-      var minGreen = 0;
-
-      foreach (var result in Results)
+      var report = StringUtils.ExtractIntsFromString(line).ToArray();
+      if (IsReportSafeWithDampener(report))
       {
-        if (result.RedCubes > minRed) minRed = result.RedCubes;
-        if (result.BlueCubes > minBlue) minBlue = result.BlueCubes;
-        if (result.GreenCubes > minGreen) minGreen = result.GreenCubes;
+        safeReports++;
+        reportedSafeLines.AppendLine(line);
       }
-
-      return minRed * minBlue * minGreen;
     }
+    return safeReports.ToString() + '\n' + reportedSafeLines;
   }
 
-  private class GameResult
+  private static bool IsReportSafe(int[] report)
   {
-    public int RedCubes { get; }
-    public int BlueCubes { get; }
-    public int GreenCubes { get; }
+    var isIncreasing = report[0] < report[1];
 
-    public GameResult(string rawInput)
+    if (isIncreasing)
     {
-      var redMatch = RedRegex.Match(rawInput);
-      var blueMatch = BlueRegex.Match(rawInput);
-      var greenMatch = GreenRegex.Match(rawInput);
+      for (var i = 1; i < report.Length; i++)
+      {
+        var curNum = report[i];
+        var lastNum = report[i - 1];
+        var diff = curNum - lastNum;
 
-      RedCubes = redMatch.Success ? int.Parse(redMatch.Groups[1].ToString()) : 0;
-      BlueCubes = blueMatch.Success ? int.Parse(blueMatch.Groups[1].ToString()) : 0;
-      GreenCubes = greenMatch.Success ? int.Parse(greenMatch.Groups[1].ToString()) : 0;
+        if (diff is < 1 or > 3)
+          return false;
+      }
+    }
+    else
+    {
+      for (var i = 1; i < report.Length; i++)
+      {
+        var curNum = report[i];
+        var lastNum = report[i - 1];
+        var diff = lastNum - curNum;
+
+        if (diff is < 1 or > 3)
+          return false;
+      }
     }
 
-    public bool IsPossible(int redTotal, int blueTotal, int greenTotal)
-      => RedCubes <= redTotal && BlueCubes <= blueTotal && GreenCubes <= greenTotal;
+    return true;
+  }
+  
+  private static bool IsReportSafeWithDampener(int[] report)
+  {
+    var isIncreasing = report[0] < report[1];
+
+    if (isIncreasing)
+    {
+      for (var i = 1; i < report.Length; i++)
+      {
+        var curNum = report[i];
+        var lastNum = report[i - 1];
+        var diff = curNum - lastNum;
+
+        if (diff is < 1 or > 3)
+        {
+          var missingLastNum = RemoveAtIndex(report, i - 1);
+          var missingCurNum = RemoveAtIndex(report, i);
+          //also attempt removing the first number! changing the move order may turn a report safe
+          var missingFirstNum = RemoveAtIndex(report, 0);
+
+          return IsReportSafe(missingLastNum) || IsReportSafe(missingCurNum) || IsReportSafe(missingFirstNum);
+        }
+      }
+    }
+    else
+    {
+      for (var i = 1; i < report.Length; i++)
+      {
+        var curNum = report[i];
+        var lastNum = report[i - 1];
+        var diff = lastNum - curNum;
+
+        if (diff is < 1 or > 3)
+        {
+          var missingLastNum = RemoveAtIndex(report, i - 1);
+          var missingCurNum = RemoveAtIndex(report, i);
+          var missingFirstNum = RemoveAtIndex(report, 0);
+          
+          return IsReportSafe(missingLastNum) || IsReportSafe(missingCurNum) || IsReportSafe(missingFirstNum);
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private static int[] RemoveAtIndex(int[] values, int index)
+  {
+    var list = values.ToList();
+    list.RemoveAt(index);
+    return list.ToArray();
   }
 }

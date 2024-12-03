@@ -5,9 +5,6 @@ namespace AdventOfCode2024.Day1;
 
 public class Day1Problems : Problems
 {
-  private static readonly Regex BasicDigitRegex = new("\\d", RegexOptions.Compiled);
-  private static readonly Regex LetterDigitRegex = new("(?=(\\d|one|two|three|four|five|six|seven|eight|nine))", RegexOptions.Compiled);
-
   protected override string TestInput => @"3   4
 4   3
 2   5
