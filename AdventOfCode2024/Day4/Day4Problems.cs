@@ -4,73 +4,92 @@ namespace AdventOfCode2024.Day4;
 
 public class Day4Problems : Problems
 {
-  protected override string TestInput => @"Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
-Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
-Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
-Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
-Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
-Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
+  protected override string TestInput => @"MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX";
 
   protected override int Day => 4;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    return AddWinningNumberPowers(input).ToString();
+    var total = 0;
+    var directions = new GridPoint[]
+    {
+      new(-1, -1),
+      new(-1, 0),
+      new(-1, 1),
+      new(0, -1),
+      new(0, 1),
+      new(1, -1),
+      new(1, 0),
+      new(1, 1)
+    };
+
+    for (var y = 0; y < input.Length; y++)
+    {
+      for (var x = 0; x < input[y].Length; x++)
+      {
+        if (input[y][x] == 'X')
+        {
+          foreach (var direction in directions)
+          {
+            if (IsValidStringInDirection(input, direction, new GridPoint(x, y), "MAS")) total++;
+          }
+        }
+      }
+    }
+    
+    return total.ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
-  {
-    return AddWinningNumberPowersWithCopyLogic(input).ToString();
-  }
+  {    
+    var total = 0;
 
-  private static int AddWinningNumberPowers(string[] input)
-  {
-    var sum = 0;
-    foreach (var line in input)
+    for (var y = 1; y < input.Length -1; y++) //don't even check on edges
     {
-      var partWeCareAbout = line.Split(':')[1];
-      var segments = partWeCareAbout.Split('|');
-      var winningNumbers = StringUtils.ExtractIntsFromString(segments[0]).ToHashSet();
-      var cardNumbers = StringUtils.ExtractIntsFromString(segments[1]).ToList();
-      var totalWinners = cardNumbers.Count(c => winningNumbers.Contains(c));
-      if (totalWinners > 0) sum += (int)Math.Pow(2, (totalWinners - 1));
-    }
-
-    return sum;
-  }
-  
-  private static int AddWinningNumberPowersWithCopyLogic(string[] input)
-  {
-    var sum = 0;
-    var totalScratchcards = 0;
-    var index = 0;
-    var copyMultipliers = new int[input.Length];
-    
-    foreach (var line in input)
-    {
-      var partWeCareAbout = line.Split(':')[1];
-      var segments = partWeCareAbout.Split('|');
-      var winningNumbers = StringUtils.ExtractIntsFromString(segments[0]).ToHashSet();
-      var cardNumbers = StringUtils.ExtractIntsFromString(segments[1]).ToList();
-      var totalWinners = cardNumbers.Count(c => winningNumbers.Contains(c));
-      
-      //still win copies of non-winning cards
-      var currentMultiplier = copyMultipliers[index] + 1;
-      totalScratchcards += currentMultiplier;
-      
-      if (totalWinners > 0)
+      for (var x = 1; x < input[y].Length - 1; x++)
       {
-        var cardSum = (int)Math.Pow(2, (totalWinners - 1));
-        sum += cardSum * currentMultiplier;
-        
-        for (var i = index + 1; i <= index + totalWinners; i++)
+        if (input[y][x] == 'A')
         {
-          copyMultipliers[i] += currentMultiplier;
+          if ((input[y - 1][x - 1] == 'M' && input[y + 1][x + 1] == 'S') ||
+              (input[y - 1][x - 1] == 'S' && input[y + 1][x + 1] == 'M'))
+          {
+            if ((input[y + 1][x - 1] == 'M' && input[y - 1][x + 1] == 'S') ||
+                (input[y + 1][x - 1] == 'S' && input[y - 1][x + 1] == 'M'))
+            {
+              total++;
+            }
+          }
         }
       }
-
-      index++;
     }
-    return totalScratchcards;
+    
+    return total.ToString();
+  }
+
+  private static bool IsValidStringInDirection(string[] input, GridPoint direction, GridPoint startingLoc, string searchStr)
+  {
+    var x = startingLoc.X + direction.X;
+    var y = startingLoc.Y + direction.Y;
+
+    //check bounds
+    if (x < 0 || x >= input[0].Length || y < 0 || y >= input.Length) return false;
+    
+    var checkChar = searchStr[0];
+    var curChar = input[y][x];
+    
+    if (curChar != checkChar) return false;
+
+    if (searchStr.Length == 1) return true;
+    
+    return IsValidStringInDirection(input, direction, new GridPoint(x, y), searchStr[1..]);
   }
 }
