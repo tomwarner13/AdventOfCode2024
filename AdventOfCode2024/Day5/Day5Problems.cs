@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Data;
+using System.Text;
 using System.Text.RegularExpressions;
 using AdventOfCode2024.Util;
 
@@ -6,157 +7,148 @@ namespace AdventOfCode2024.Day5;
 
 public class Day5Problems : Problems
 {
-  protected override string TestInput => @"seeds: 79 14 55 13
+  protected override string TestInput => @"47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13
 
-seed-to-soil map:
-50 98 2
-52 50 48
-
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
-
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
-
-water-to-light map:
-88 18 7
-18 25 70
-
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
-
-temperature-to-humidity map:
-0 69 1
-1 0 69
-
-humidity-to-location map:
-60 56 37
-56 93 4";
+75,47,61,53,29
+97,61,53,29,13
+75,29,13
+75,97,47,61,53
+61,13,29
+97,13,75,29,47";
 
   protected override int Day => 5;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    return ParseAndTranslateSeedMaps(input).ToString();
-    throw new NotImplementedException();
-  }
+    var accumulator = 0;
+    var rules = new Dictionary<int, List<int>>();
+    var parsingRules = true;
 
-  private static long ParseAndTranslateSeedMaps(string[] input)
-  {
-    var seeds = new List<List<long>>();
-    var maps = new List<TranslationMap>();
-    
-    //parse input and build data
     foreach (var line in input)
     {
-      if (seeds.Count == 0) //first line, add seeds
+      if (parsingRules)
       {
-        var rawSeeds = StringUtils.ExtractLongsFromString(line);
-        seeds = rawSeeds.Select(i => new List<long> { i }).ToList();
-      }
-      else if(!string.IsNullOrWhiteSpace(line)) //we're building maps, and skipping whitespace lines
-      {
-        var isText = RegexUtils.BasicLetterRegex.IsMatch(line);
-        if (isText) //start new map
+        if (string.IsNullOrWhiteSpace(line))
         {
-          maps.Add(new TranslationMap(line));
+          parsingRules = false;
         }
-        else //append to existing
+        else
         {
-          maps.Last().AddItem(line);
-        }
-      }
-    }
-    
-    //process seed translations
-    foreach (var seed in seeds)
-    {
-      foreach (var map in maps)
-      {
-        var intermediateResult = map.TryTranslate(seed.Last());
-        seed.Add(intermediateResult);
-      }
-    }
-    
-    //find seed with lowest location
-    var lowestSeedStart = long.MaxValue;
-    var lowestFinalLocation = long.MaxValue;
+          var ints = StringUtils.ExtractIntsFromString(line).ToArray();
 
-    foreach (var seed in seeds)
-    {
-      var finalLoc = seed.Last();
-      if (finalLoc < lowestFinalLocation)
+          if (rules.ContainsKey(ints[1]))
+          {
+            rules[ints[1]].Add(ints[0]);
+          }
+          else
+          {
+            rules.Add(ints[1], new List<int> { ints[0] });
+          }
+        }
+      }
+      else
       {
-        lowestSeedStart = seed[0];
-        lowestFinalLocation = finalLoc;
+        var ints = StringUtils.ExtractIntsFromString(line).ToArray();
+        accumulator += ReturnMiddleNumberIfRulesValidate(ints, rules);
       }
     }
     
-    return lowestFinalLocation;
+    return accumulator.ToString();
   }
   
   protected override string Problem2(string[] input, bool isTestInput)
-  {
-    throw new NotImplementedException();
-  }
+  {    
+    var accumulator = 0;
+    var rules = new Dictionary<int, List<int>>();
+    var parsingRules = true;
 
-  private class TranslationMap
-  {
-    public readonly string Name;
-    private List<TranslationItem> _items = new();
-
-    public TranslationMap(string name)
+    foreach (var line in input)
     {
-      Name = name;
-    }
-
-    public void AddItem(string line)
-    {
-      _items.Add(new TranslationItem(line));
-    }
-
-    public long TryTranslate(long i)
-    {
-      var result = i;
-      foreach (var item in _items)
+      if (parsingRules)
       {
-        result = item.TryTranslateLong(result);
-        if (result != i) return result; //stop translating once moved
+        if (string.IsNullOrWhiteSpace(line))
+        {
+          parsingRules = false;
+        }
+        else
+        {
+          var ints = StringUtils.ExtractIntsFromString(line).ToArray();
+
+          if (rules.ContainsKey(ints[1]))
+          {
+            rules[ints[1]].Add(ints[0]);
+          }
+          else
+          {
+            rules.Add(ints[1], new List<int> { ints[0] });
+          }
+        }
       }
-
-      return result;
-    }
-
-    public override string ToString() => Name;
-  }
-
-  private class TranslationItem
-  {
-    public readonly long Start;
-    public readonly long End;
-    public readonly long TransformByAmount;
-
-    public TranslationItem(string rawInput)
-    {
-      var numbers = StringUtils.ExtractLongsFromString(rawInput).ToArray();
-      Start = numbers[1];
-      End = (Start + numbers[2]) - 1;
-      TransformByAmount = (numbers[0] - Start);
-    }
-
-    public long TryTranslateLong(long i)
-    {
-      if (i >= Start && i <= End) return i + TransformByAmount;
-      return i;
+      else
+      {
+        var ints = StringUtils.ExtractIntsFromString(line).ToArray();
+        accumulator += ReturnMiddleNumberOrAdjustRules(ints, rules);
+      }
     }
     
-    public override string ToString() => $"{Start} | {End} | {TransformByAmount}";
+    return accumulator.ToString();
+  }
+
+  private static int ReturnMiddleNumberIfRulesValidate(int[] ints, Dictionary<int, List<int>> rules)
+  {
+    var invalidNums = new HashSet<int>();
+
+    foreach (var num in ints)
+    {
+      if (invalidNums.Contains(num))
+      {
+        return 0;
+      }
+
+      if(rules.TryGetValue(num, out var rule)) invalidNums.UnionWith(rule);
+    }
+    
+    return ints[ints.Length / 2];
+  }
+  
+  private static int ReturnMiddleNumberOrAdjustRules(int[] ints, Dictionary<int, List<int>> rules, bool isFirstAttempt = true)
+  {
+    var invalidNums = new HashSet<int>();
+    var index = 0;
+
+    foreach (var num in ints)
+    {
+      if (invalidNums.Contains(num))
+      {
+        //swap current index with index before
+        (ints[index], ints[index - 1]) = (ints[index - 1], ints[index]);
+        return ReturnMiddleNumberOrAdjustRules(ints, rules, false);
+      }
+
+      if(rules.TryGetValue(num, out var rule)) invalidNums.UnionWith(rule);
+      index++;
+    }
+    
+    return isFirstAttempt ? 0 : ints[ints.Length / 2];
   }
 }
