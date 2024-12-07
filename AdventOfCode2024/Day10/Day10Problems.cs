@@ -1,5 +1,4 @@
-﻿using System.Text;
-using AdventOfCode2024.Util;
+﻿using AdventOfCode2024.Util;
 
 namespace AdventOfCode2024.Day10;
 
