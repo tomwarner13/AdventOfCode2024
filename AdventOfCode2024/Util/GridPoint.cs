@@ -10,6 +10,14 @@ public struct GridPoint : IEquatable<GridPoint>
     X = x;
     Y = y;
   }
+  
+  /// <summary>
+  /// Checks that the point is >= (0,0) and lt (bounds)
+  /// </summary>
+  /// <param name="bounds"></param>
+  /// <returns></returns>
+  public bool IsInBounds(GridPoint bounds) 
+    => X >= 0 && Y >= 0 && X < bounds.X && Y < bounds.Y;
 
   public bool Equals(GridPoint other)
   {

@@ -4,111 +4,152 @@ namespace AdventOfCode2024.Day8;
 
 public class Day8Problems : Problems
 {
-  protected override string TestInput => @"LLR
-
-AAA = (BBB, BBB)
-BBB = (AAA, ZZZ)
-ZZZ = (ZZZ, ZZZ)";
+  protected override string TestInput => @"............
+........0...
+.....0......
+.......0....
+....0.......
+......A.....
+............
+............
+........A...
+.........A..
+............
+............";
 
   protected override int Day => 8;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    var moveInstructions = input[0];
+    var antennaeByFrequency = new Dictionary<char, List<GridPoint>>();
+    var antinodes = new HashSet<GridPoint>();
+    var bounds = new GridPoint(input[0].Length, input.Length);
 
-    var map = new Dictionary<string, (string left, string right)>();
-    const string endNode = "ZZZ";
-    var currentNode = "AAA";
-
-    var currentStep = 0;
-    
-    //parse and setup dictionary
-    foreach (var line in input.Take(new Range(2, input.Length))) //does this throw lol
+    for (var y = 0; y < input.Length; y++)
     {
-      var parts = StringUtils.ExtractWordsFromString(line).ToArray();
-      map.Add(parts[0], (parts[1], parts[2]));
-    }
-
-    while (currentNode != endNode)
-    {
-      var nodeDetails = map[currentNode];
-      var currentDirectionIndex = currentStep % moveInstructions.Length;
-      var currentDirection = moveInstructions[currentDirectionIndex];
-
-      currentNode = currentDirection switch
+      for (var x = 0; x < input.Length; x++)
       {
-        'R' => nodeDetails.right,
-        'L' => nodeDetails.left,
-        _ => throw new ThisShouldNeverHappenException("invalid direction")
-      };
-
-      currentStep++;
+        var checkChar = input[y][x];
+        switch (checkChar)
+        {
+          case '.':
+            //no-op
+            break;
+          default:
+            if (antennaeByFrequency.ContainsKey(checkChar))
+            {
+              antennaeByFrequency[checkChar].Add(new GridPoint(x, y));
+            }
+            else
+            {
+              antennaeByFrequency.Add(checkChar, new List<GridPoint> { new (x, y) });
+            }
+            break;
+        }
+      }
     }
 
-    return currentStep.ToString();
+    foreach (var frequency in antennaeByFrequency)
+    {
+      for (var i = 0; i < frequency.Value.Count; i++)
+      {
+        for (var j = i + 1; j < frequency.Value.Count; j++)
+        {
+          var p1 = frequency.Value[i];
+          var p2 = frequency.Value[j];
+          
+          var diff = p2 - p1;
+
+          var a1 = p1 - diff;
+          var a2 = p2 + diff;
+          
+          if(a1.IsInBounds(bounds)) antinodes.Add(a1);
+          if(a2.IsInBounds(bounds)) antinodes.Add(a2);
+        }
+      }
+    }
+    
+    return antinodes.Count.ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
-  {
-    //problem 2 test input is different
-    if (isTestInput)
+  {    var antennaeByFrequency = new Dictionary<char, List<GridPoint>>();
+    var antinodes = new HashSet<GridPoint>();
+    var bounds = new GridPoint(input[0].Length, input.Length);
+
+    for (var y = 0; y < input.Length; y++)
     {
-      const string p2Test = @"LR
-
-11A = (11B, XXX)
-11B = (XXX, 11Z)
-11Z = (11B, XXX)
-22A = (22B, XXX)
-22B = (22C, 22C)
-22C = (22Z, 22Z)
-22Z = (22B, 22B)
-XXX = (XXX, XXX)";
-      
-      input = p2Test.Split('\n').Select(s => s.Trim()).ToArray();
-    }
-    
-    
-    var moveInstructions = input[0];
-
-    var map = new Dictionary<string, (string left, string right)>();
-    var currentNodes = new List<string>();
-
-    var currentStep = 0;
-    
-    //parse and setup dictionary
-    foreach (var line in input.Take(new Range(2, input.Length))) //does this throw lol
-    {
-      var parts = StringUtils.ExtractAlphanumericsFromString(line).ToArray();
-      map.Add(parts[0], (parts[1], parts[2]));
-      if(parts[0][2] == 'A') currentNodes.Add(parts[0]);
-    }
-
-    while (ShouldContinue(currentNodes))
-    {
-      
-      var currentDirectionIndex = currentStep % moveInstructions.Length;
-      var currentDirection = moveInstructions[currentDirectionIndex];
-
-      var nextNodes = new List<string>();
-      foreach (var currentNode in currentNodes)
+      for (var x = 0; x < input.Length; x++)
       {
-        var nodeDetails = map[currentNode];
-
-        nextNodes.Add(currentDirection switch
+        var checkChar = input[y][x];
+        switch (checkChar)
         {
-          'R' => nodeDetails.right,
-          'L' => nodeDetails.left,
-          _ => throw new ThisShouldNeverHappenException("invalid direction")
-        });
+          case '.':
+            //no-op
+            break;
+          default:
+            if (antennaeByFrequency.ContainsKey(checkChar))
+            {
+              antennaeByFrequency[checkChar].Add(new GridPoint(x, y));
+            }
+            else
+            {
+              antennaeByFrequency.Add(checkChar, new List<GridPoint> { new (x, y) });
+            }
+            break;
+        }
       }
-
-      currentNodes = nextNodes;
-      currentStep++;
     }
 
-    return currentStep.ToString();
-  }
+    foreach (var frequency in antennaeByFrequency)
+    {
+      for (var i = 0; i < frequency.Value.Count; i++)
+      {
+        for (var j = i + 1; j < frequency.Value.Count; j++)
+        {
+          var p1 = frequency.Value[i];
+          var p2 = frequency.Value[j];
+          
+          antinodes.Add(p1);
+          antinodes.Add(p2);
+          
+          var diff = p2 - p1;
 
-  private static bool ShouldContinue(IEnumerable<string> currentNodes) =>
-    currentNodes.Any(n => n[2] != 'Z');
+          var isInBounds = true;
+          var curPoint1 = p1 - diff;
+
+          while (isInBounds)
+          {
+            if (curPoint1.IsInBounds(bounds))
+            {
+              antinodes.Add(curPoint1);
+              curPoint1 -= diff;
+            }
+            else
+            {
+              isInBounds = false;
+            }
+          }
+
+          isInBounds = true;
+          var curPoint2 = p2 + diff;
+
+          while (isInBounds)
+          {
+            if (curPoint2.IsInBounds(bounds))
+            {
+              antinodes.Add(curPoint2);
+              curPoint2 += diff;
+            }
+            else
+            {
+              isInBounds = false;
+            }
+          }
+        }
+      }
+    }
+    
+    return antinodes.Count.ToString();
+  }
 }
