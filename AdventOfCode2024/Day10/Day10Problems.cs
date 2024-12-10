@@ -4,118 +4,99 @@ namespace AdventOfCode2024.Day10;
 
 public class Day10Problems : Problems
 {
-  protected override string TestInput => @"7-F7-
-.FJ|7
-SJLL7
-|F--J
-LJ.LJ";
+  protected override string TestInput => @"89010123
+78121874
+87430965
+96549874
+45678903
+32019012
+01329801
+10456732";
 
   protected override int Day => 10;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    var map = input;
-    //have to find index of start
-    var startIndex = new GridPoint();
-    var startFound = false;
-    for(var i = 0; i < input.Length; i++)
+    var trailMap = new int[input.Length][];
+    var trailHeads = new List<GridPoint>();
+
+    for (var y = 0; y < input.Length; y++)
     {
-      var foundSIndex = input[i].IndexOf('S');
-      if (foundSIndex != -1)
+      trailMap[y] = new int[input[y].Length];
+      for (var x = 0; x < input[y].Length; x++)
       {
-        startIndex = new GridPoint(foundSIndex, i);
-        i = input.Length;
-        startFound = true;
+        var curElevation = int.Parse(input[y][x].ToString());
+        trailMap[y][x] = curElevation;
+        if(curElevation == 0)
+          trailHeads.Add(new GridPoint(x, y));
       }
     }
 
-    if (!startFound) throw new ThisShouldNeverHappenException("start never found!");
-    
-    //find the two directions which connect to the start point, embark from there
-    var connectedPoints = CheckForAdjacentConnections(map, startIndex).ToList();
+    var totalTrails = 0;
 
-    if (connectedPoints.Count != 2) throw new ThisShouldNeverHappenException($"connectedpoints count wrong!");
-    
-    var firstRoute = connectedPoints[0];
-    var firstRoutePrev = startIndex;
-    var secondRoute = connectedPoints[1];
-    var secondRoutePrev = startIndex;
-    var stepsTaken = 1;
-
-    while (firstRoute != secondRoute)
+    foreach (var head in trailHeads)
     {
-      var firstRouteNext = FindNextPoint(firstRoute, firstRoutePrev, map);
-      var secondRouteNext = FindNextPoint(secondRoute, secondRoutePrev, map);
-
-      firstRoutePrev = firstRoute;
-      firstRoute = firstRouteNext;
-
-      secondRoutePrev = secondRoute;
-      secondRoute = secondRouteNext;
-      
-      stepsTaken++;
+      totalTrails += GetUniqueDestinations(head, ref trailMap).Count;
     }
-
-    return stepsTaken.ToString();
+    
+    return totalTrails.ToString();
   }
-
-  private static GridPoint FindNextPoint(GridPoint current, GridPoint previous, string[] map)
-  {
-    var possibilities = GetAdjacentConnectedPoints(map[current.Y][current.X]);
-    return possibilities.p1 + current != previous ? possibilities.p1 + current : possibilities.p2 + current;
-  }
-
-  private static IEnumerable<GridPoint> CheckForAdjacentConnections(string[] map, GridPoint target)
-  {
-    var possibleAdjacencies = new GridPoint[]
-    {
-      new(-1, 0),
-      new(1, 0),
-      new(0, -1),
-      new(0, 1)
-    };
-
-    foreach (var possibleAdjacency in possibleAdjacencies)
-    {
-      var checkPoint = target + possibleAdjacency;
-      //check if in bounds first
-      if (checkPoint.X >= 0
-          && checkPoint.X < map[0].Length
-          && checkPoint.Y >= 0
-          && checkPoint.Y < map.Length)
-      {
-        var charToCheck = map[checkPoint.Y][checkPoint.X];
-        if (IsPipeChar(charToCheck))
-        {
-          var points = GetAdjacentConnectedPoints(charToCheck);
-          if (checkPoint + points.p1 == target || checkPoint + points.p2 == target)
-          {
-            yield return checkPoint;
-          }
-        }
-      }
-    }
-  }
-  
-  private static (GridPoint p1, GridPoint p2) GetAdjacentConnectedPoints(char c)
-  {
-    return c switch
-    {
-      '|' => (new GridPoint(0, -1), new GridPoint(0, 1)),
-      '-' => (new GridPoint(-1, 0), new GridPoint(1, 0)),
-      'L' => (new GridPoint(0, -1), new GridPoint(1, 0)),
-      'J' => (new GridPoint(-1, 0), new GridPoint(0, -1)),
-      '7' => (new GridPoint(-1, 0), new GridPoint(0, 1)),
-      'F' => (new GridPoint(0, 1), new GridPoint(1, 0)),
-      _ => throw new ThisShouldNeverHappenException($"attempted to get connections to character '{c}'")
-    };
-  }
-
-  private static bool IsPipeChar(char c)
-    => c is '|' or '-' or 'L' or 'J' or '7' or 'F';
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    throw new NotImplementedException();
+    var trailMap = new int[input.Length][];
+    var trailHeads = new List<GridPoint>();
+
+    for (var y = 0; y < input.Length; y++)
+    {
+      trailMap[y] = new int[input[y].Length];
+      for (var x = 0; x < input[y].Length; x++)
+      {
+        var curElevation = int.Parse(input[y][x].ToString());
+        trailMap[y][x] = curElevation;
+        if(curElevation == 0)
+          trailHeads.Add(new GridPoint(x, y));
+      }
+    }
+
+    var totalTrails = 0;
+
+    foreach (var head in trailHeads)
+    {
+      totalTrails += GetUniquePathCount(head, ref trailMap);
+    }
+    
+    return totalTrails.ToString();
+  }
+
+  private static HashSet<GridPoint> GetUniqueDestinations(GridPoint trail, ref int[][] trailMap, int prevElevation = -1)
+  {
+    if (!trail.IsInBounds(trailMap[0].Length, trailMap.Length)) return new HashSet<GridPoint>();
+    
+    var curElevation = trailMap[trail.Y][trail.X];
+    if (curElevation - 1 != prevElevation) return new HashSet<GridPoint>();
+    if (curElevation == 9) return new HashSet<GridPoint> { trail };
+
+    var result =  GetUniqueDestinations(trail + GridPoint.Up, ref trailMap, curElevation);
+    result.UnionWith(GetUniqueDestinations(trail + GridPoint.Down, ref trailMap, curElevation));
+    result.UnionWith(GetUniqueDestinations(trail + GridPoint.Left, ref trailMap, curElevation));
+    result.UnionWith(GetUniqueDestinations(trail + GridPoint.Right, ref trailMap, curElevation));
+    
+    return result;
+  }
+  
+  
+  private static int GetUniquePathCount(GridPoint trail, ref int[][] trailMap, int prevElevation = -1)
+  {
+    if (!trail.IsInBounds(trailMap[0].Length, trailMap.Length)) return 0;
+    
+    var curElevation = trailMap[trail.Y][trail.X];
+    if (curElevation - 1 != prevElevation) return 0;
+    if (curElevation == 9) return 1;
+
+    return GetUniquePathCount(trail + GridPoint.Up, ref trailMap, curElevation) +
+    GetUniquePathCount(trail + GridPoint.Down, ref trailMap, curElevation) +
+    GetUniquePathCount(trail + GridPoint.Left, ref trailMap, curElevation) +
+    GetUniquePathCount(trail + GridPoint.Right, ref trailMap, curElevation);
   }
 }
