@@ -4,89 +4,170 @@ namespace AdventOfCode2024.Day9;
 
 public class Day9Problems : Problems
 {
-  protected override string TestInput => @"0 3 6 9 12 15
-1 3 6 10 15 21
-10 13 16 21 30 45";
+  protected override string TestInput => @"2333133121414131402";
 
   protected override int Day => 9;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    long sum = 0;
-    foreach (var line in input)
+    var diskLayout = new List<long>();
+
+    for (var i = 0; i < input[0].Length; i++)
     {
-      var rawList = StringUtils.ExtractIntsFromString(line, true).ToList();
-      var nextNumber = RecursivelyAddToSequence(rawList);
-      sum += nextNumber;
-    }
+      var c = input[0][i];
 
-    return sum.ToString();
-  }
-
-  private static int RecursivelyAddToSequence(List<int> sequence)
-  {
-    var result = new List<int>();
-    var allZeroes = true;
-    int? prevValue = null;
-
-    foreach (var item in sequence)
-    {
-      if (item != 0) allZeroes = false;
-
-      if (prevValue != null)
+      int fileBlock;
+      if (i % 2 == 1)
       {
-        result.Add(item - prevValue.Value);
+        fileBlock = -1;
+      }
+      else
+      {
+        fileBlock = i / 2;
       }
 
-      prevValue = item;
+      var amountToAdd = int.Parse(c.ToString());
+      for (var j = 0; j < amountToAdd; j++)
+      {
+        diskLayout.Add(fileBlock);
+      }
     }
 
-    if (allZeroes)
+    var currentBlock = 0;
+    var lastBlock = diskLayout.Count - 1;
+
+    while (currentBlock < lastBlock)
     {
-      return 0;
+      if (currentBlock == 49798)
+      {
+        var i = 0;
+      }
+      
+      if(diskLayout[currentBlock] != -1) currentBlock++;
+      else
+      {
+        while (diskLayout[lastBlock] == -1)
+        {
+          lastBlock--;
+        }
+        if(currentBlock < lastBlock) //avoid the double-swap bug!
+          (diskLayout[currentBlock], diskLayout[lastBlock]) = (diskLayout[lastBlock], diskLayout[currentBlock]);
+        currentBlock++;
+        lastBlock--;
+      }
     }
 
-    var nextResult = RecursivelyAddToSequence(result);
-    return nextResult + sequence.Last();
+    long checkSum = 0;
+    currentBlock = 0;
+
+    while (diskLayout[currentBlock] != -1)
+    {
+      checkSum += diskLayout[currentBlock] * currentBlock;
+      currentBlock++;
+    }
+
+    var firstFoundFreeSpace = currentBlock;
+    
+    while (currentBlock < diskLayout.Count)
+    {
+      if (diskLayout[currentBlock] != -1)
+      {
+        throw new InvalidOperationException($"first free: {firstFoundFreeSpace} | found {diskLayout[currentBlock]} at position {currentBlock}");
+      }
+      currentBlock++;
+    }
+    
+    return checkSum.ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    long sum = 0;
-    foreach (var line in input)
+    var diskLayout = new List<int>();
+
+    for (var i = 0; i < input[0].Length; i++)
     {
-      var rawList = StringUtils.ExtractIntsFromString(line, true).ToList();
-      var nextNumber = RecursivelyAddToBeginningOfSequence(rawList);
-      sum += nextNumber;
-    }
+      var c = input[0][i];
 
-    return sum.ToString();
-  }
-  
-  private static int RecursivelyAddToBeginningOfSequence(List<int> sequence)
-  {
-    var result = new List<int>();
-    var allZeroes = true;
-    int? prevValue = null;
-
-    foreach (var item in sequence)
-    {
-      if (item != 0) allZeroes = false;
-
-      if (prevValue != null)
+      int fileBlock;
+      if (i % 2 == 1)
       {
-        result.Add(item - prevValue.Value);
+        fileBlock = -1;
+      }
+      else
+      {
+        fileBlock = i / 2;
       }
 
-      prevValue = item;
+      var amountToAdd = int.Parse(c.ToString());
+      for (var j = 0; j < amountToAdd; j++)
+      {
+        diskLayout.Add(fileBlock);
+      }
     }
+    
+    var filePointer = diskLayout.Count - 1;
 
-    if (allZeroes)
+    while (filePointer >= 0)
     {
-      return 0;
-    }
+      if (diskLayout[filePointer] != -1)
+      {
+        var blockEndPostion = filePointer;
+        var blockId = diskLayout[filePointer];
 
-    var nextResult = RecursivelyAddToBeginningOfSequence(result);
-    return sequence.First() - nextResult;
+        while (filePointer >= 0 && diskLayout[filePointer] == blockId)
+        {
+          filePointer--;
+        }
+        
+        var blockStart = filePointer + 1;
+        var blockLength = blockEndPostion - filePointer;
+        
+        //start at zero, search through layout for a space blockLength long
+        var searchPos = 0;
+        var gapStart = 0;
+
+        while (searchPos < blockStart)
+        {
+          if (diskLayout[searchPos] != -1)
+          {
+            gapStart = searchPos;
+          }
+          else
+          {
+            if (searchPos - gapStart == blockLength)
+            {
+              //gap found, move whole file
+              for (var i = gapStart + 1; i <= gapStart + blockLength; i++)
+              {
+                diskLayout[i] = blockId;
+              }
+
+              for (var i = blockStart; i < blockStart + blockLength; i++)
+              {
+                diskLayout[i] = -1;
+              }
+
+              searchPos = blockStart;
+            }
+          }
+          
+          searchPos++;
+        }
+      }
+      else
+      {
+        filePointer--;
+      }
+    }
+    
+    
+    long checkSum = 0;
+
+    for(var i = 0; i < diskLayout.Count; i++)
+    {
+      if(diskLayout[i] != -1) checkSum += diskLayout[i] * i;
+    }
+    
+    return checkSum.ToString();
   }
 }
