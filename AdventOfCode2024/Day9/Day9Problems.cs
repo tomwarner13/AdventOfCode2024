@@ -38,11 +38,6 @@ public class Day9Problems : Problems
 
     while (currentBlock < lastBlock)
     {
-      if (currentBlock == 49798)
-      {
-        var i = 0;
-      }
-      
       if(diskLayout[currentBlock] != -1) currentBlock++;
       else
       {
