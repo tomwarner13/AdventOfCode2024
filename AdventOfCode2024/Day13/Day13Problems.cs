@@ -5,222 +5,190 @@ namespace AdventOfCode2024.Day13;
 
 public class Day13Problems : Problems
 {
-  protected override string TestInput => @"[1,1,3,1,1]
-[1,1,5,1,1]
+  protected override string TestInput => @"Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400
 
-[[1],[2,3,4]]
-[[1],4]
+Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176
 
-[9]
-[[8,7,6]]
+Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450
 
-[[4,4],4,4]
-[[4,4],4,4,4]
+Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279";
 
-[7,7,7,7]
-[7,7,7]
-
-[]
-[3]
-
-[[[]]]
-[[]]
-
-[1,[2,[3,[4,[5,6,7]]]],8,9]
-[1,[2,[3,[4,[5,6,0]]]],8,9]";
+//   protected override string TestInput =>
+//     @"3 5
+// 5 3
+// 8 8
+//
+// 10 10 #fails, tries wrong increments
+// 4 8
+// 100 100
+//
+// 12 2
+// 6 7
+// 18 9
+//
+// 3 5
+// 5 3
+// 64 64
+//
+// Button A: X+94, Y+34 # should be 80, 40
+// Button B: X+22, Y+67
+// Prize: X=8400, Y=5400
+//
+// Button A: X+17, Y+86 # should be 38, 86
+// Button B: X+84, Y+37
+// Prize: X=7870, Y=6450
+//
+// 1 1
+// 2 2 
+// 1 1
+//
+// 0 1
+// 0 1
+// 0 2
+//
+// 1 1
+// 1 0
+// 2 2
+//
+// 0 1
+// 0 7
+// 1 8";
 
   protected override int Day => 13;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    JArray packet1 = null;
-    JArray packet2 = null;
-    var i = 0;
-    var pairIndex = 1;
-    var result = 0;
+    var totalWinningsCost = 0L;
+    const int maxMoves = 100;
 
-    foreach (var line in input)
+    for (var i = 0; i < input.Length; i += 4)
     {
-      i = i % 3;
-
-      switch (i)
-      {
-        case 0:
-          packet1 = ParseLine(line);
-          break;
-        case 1:
-          packet2 = ParseLine(line);
-          break;
-        case 2:
-          //do packet comparisons here
-          if (CheckOrdering(packet1, packet2) == Ordering.Correct)
-          {
-            result += pairIndex;
-          }
-
-          pairIndex++;
-          break;
-      }
-
-      i++;
+      var aInput = StringUtils.ExtractIntsFromString(input[i]).ToArray();
+      var bInput = StringUtils.ExtractIntsFromString(input[i + 1]).ToArray();
+      var pInput = StringUtils.ExtractIntsFromString(input[i + 2]).ToArray();
+      
+      var aX = aInput[0];
+      var aY = aInput[1];
+      var bX = bInput[0];
+      var bY = bInput[1];
+      var pX = pInput[0];
+      var pY = pInput[1];
+      
+      totalWinningsCost += GetLowestTotalCost(aX, aY, bX, bY, pX, pY, maxMoves) ?? 0;
     }
-
-    //for final line
-    if (CheckOrdering(packet1, packet2) == Ordering.Correct)
-    {
-      result += pairIndex;
-    }
-
-    return result.ToString();
+    
+    return totalWinningsCost.ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    const string divider1 = "[[2]]";
-    const string divider2 = "[[6]]";
+    var totalWinningsCost = 0L; //test response should be 875318608908
+    const long clawCompensator = 10000000000000;
 
-    var parsedLines = new List<MessageLine>
+    for (var i = 0; i < input.Length; i += 4)
     {
-      new(divider1),
-      new(divider2)
-    };
-
-    foreach (var line in input)
-    {
-      if(!string.IsNullOrWhiteSpace(line))
-        parsedLines.Add(new MessageLine(line));
+      var aInput = StringUtils.ExtractIntsFromString(input[i]).ToArray();
+      var bInput = StringUtils.ExtractIntsFromString(input[i + 1]).ToArray();
+      var pInput = StringUtils.ExtractIntsFromString(input[i + 2]).ToArray();
+      
+      var aX = aInput[0];
+      var aY = aInput[1];
+      var bX = bInput[0];
+      var bY = bInput[1];
+      var pX = pInput[0];
+      var pY = pInput[1];
+      
+      totalWinningsCost += GetLowestTotalCostUsingLinearSubstitution(aX, aY, bX, bY, pX, pY, clawCompensator) ?? 0;
     }
-
-    parsedLines.Sort();
-
-    var idx1 = parsedLines.FindIndex(l => l.Raw == divider1) + 1;
-    var idx2 = parsedLines.FindIndex(l => l.Raw == divider2) + 1;
-
-    return (idx1 * idx2).ToString();
+    
+    return totalWinningsCost.ToString();
   }
 
-  private class MessageLine : IComparable<MessageLine>
+  private static long? GetLowestTotalCostUsingLinearSubstitution(int aX, int aY, int bX, int bY, int pXraw, int pYraw,
+    long clawOffset = 0)
   {
-    public readonly string Raw;
-    public readonly JToken Parsed;
+    var pX = pXraw + clawOffset;
+    var pY = pYraw + clawOffset;
 
-    public MessageLine(string raw)
+    var possibleSolutionForB = ((pY * aX) - (pX * aY)) / ((bY * aX) - (bX * aY)); //math is crazy lmao rip
+    var possibleSolutionForA = (pX - (possibleSolutionForB * bX)) / aX;
+
+    var xDist = possibleSolutionForA * aX + possibleSolutionForB * bX;
+    var yDist = possibleSolutionForA * aY + possibleSolutionForB * bY;
+    if (xDist == pX && yDist == pY)
     {
-      Raw = raw;
-      Parsed = ParseLine(raw);
+      return (possibleSolutionForA * 3) + possibleSolutionForB;
     }
 
-    public int CompareTo(MessageLine? other)
+    return null;
+  }
+
+  private static long? GetLowestTotalCost(int aX, int aY, int bX, int bY, int pXraw, int pYraw, int maxMoves = 0, long clawOffset = 0)
+  {
+    long aTotal = aX + aY;
+    long bTotal = bX + bY;
+
+    var pX = pXraw + clawOffset;
+    var pY = pYraw + clawOffset;
+    
+    var pTotal = pX + pY;
+
+    var extendedEuclideanResult = ExtendedEuclidean(aTotal, bTotal);
+    
+    //is a solution even possible?
+    if(pTotal % extendedEuclideanResult.gcd != 0) return null;
+    
+    //find a working solution point that's possibly wildly out of bounds
+    var pointX = extendedEuclideanResult.x * pTotal / extendedEuclideanResult.gcd;
+    
+    var solutionA = pointX % (bTotal / extendedEuclideanResult.gcd);
+    var solutionB = (pTotal - (aTotal * solutionA))/bTotal;
+    
+    long? lowestTotalCost = null;
+
+    while (solutionB >= 0)
     {
-      var compareResult = CheckOrdering(Parsed, other.Parsed);
-
-      return compareResult switch
+      //validate solution
+      var validSolution = maxMoves > 0 ?
+        solutionA >= 0 && solutionA <= maxMoves && solutionB <= maxMoves :
+        solutionA >= 0;
+      
+      if (validSolution)
       {
-        Ordering.Correct => -1,
-        Ordering.Equal => 0,
-        Ordering.Wrong => 1,
-      };
+        var xDist = solutionA * aX + solutionB * bX;
+        var yDist = solutionA * aY + solutionB * bY;
+        if (xDist == pX && yDist == pY)
+        {
+          var cost = (solutionA * 3) + solutionB;
+          if(lowestTotalCost == null || cost < lowestTotalCost)
+            lowestTotalCost = cost;
+        }
+      }
+
+      solutionA += bTotal / extendedEuclideanResult.gcd;
+      solutionB -= aTotal / extendedEuclideanResult.gcd;
     }
-
-    public override string ToString() => Raw;
+    
+    return lowestTotalCost;
   }
 
-  private static Ordering CheckOrdering(JToken leftPacket, JToken rightPacket)
+  private static (long gcd, long x, long y) ExtendedEuclidean(long a, long b)
   {
-    var currentResult = Ordering.Equal;
-    var curIndex = 0;
-
-    while (currentResult == Ordering.Equal)
-    {
-      JToken leftVal = null;
-      JToken rightVal = null;
-
-      try
-      {
-        leftVal = TryGetAtKey(curIndex, leftPacket);
-        rightVal = TryGetAtKey(curIndex, rightPacket);
-      }
-      catch (Exception e)
-      {
-        Console.WriteLine(e);
-        throw;
-      }
-
-      if (leftVal == null && rightVal == null)
-      {
-        //have reached end of both lists, return equal
-        return Ordering.Equal;
-      }
-
-      if (leftVal == null && rightVal != null)
-      {
-        return Ordering.Correct;
-      }
-
-      if (leftVal != null && rightVal == null)
-      {
-        return Ordering.Wrong;
-      }
-
-      if (leftVal.Type == JTokenType.Integer && rightVal.Type == JTokenType.Integer)
-      {
-        currentResult = CheckIntOrdering(leftVal, rightVal);
-      }
-      else
-      {
-        //box ints if necessary then compare as packets
-        currentResult = CheckOrdering(BoxIfNecessary(leftVal), BoxIfNecessary(rightVal));
-      }
-
-      curIndex++;
-    }
-
-    return currentResult;
-  }
-
-  private static JToken TryGetAtKey(int index, JToken obj)
-  {
-    var childCount = obj.Children().Count();
-    return index > childCount - 1 ? null : obj[index];
-  }
-
-  private static JToken BoxIfNecessary(JToken token)
-  {
-    return token.Type == JTokenType.Integer ? new JArray(token) : token;
-  }
-
-  private static Ordering CheckIntOrdering(JToken leftToken, JToken rightToken)
-  {
-    var left = leftToken.ToObject<int>();
-    var right = rightToken.ToObject<int>();
-
-    if (left < right)
-    {
-      return Ordering.Correct;
-    }
-
-    if (left == right)
-    {
-      return Ordering.Equal;
-    }
-
-    if (left > right)
-    {
-      return Ordering.Wrong;
-    }
-
-    throw new ArgumentException();
-  }
-
-  private enum Ordering
-  {
-    Correct,
-    Equal,
-    Wrong
-  }
-
-  private static JArray ParseLine(string line)
-  {
-    return JArray.Parse(line);
+    if (a == 0) return (b, 0, 1);
+    
+    var recursiveResult = ExtendedEuclidean(b % a, a);
+    
+    var x = recursiveResult.y - (b / a) * recursiveResult.x;
+    var y = recursiveResult.x;
+ 
+    return (recursiveResult.gcd, x, y);
   }
 }
