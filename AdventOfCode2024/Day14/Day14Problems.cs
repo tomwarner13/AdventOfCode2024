@@ -4,212 +4,72 @@ namespace AdventOfCode2024.Day14;
 
 public class Day14Problems : Problems
 {
-  protected override string TestInput => @"498,4 -> 498,6 -> 496,6
-503,4 -> 502,4 -> 502,9 -> 494,9";
+  protected override string TestInput => @"p=0,4 v=3,-3
+p=6,3 v=-1,-3
+p=10,3 v=-1,2
+p=2,0 v=2,-1
+p=0,0 v=1,3
+p=3,0 v=-2,-2
+p=7,6 v=-1,-3
+p=3,0 v=-1,-2
+p=9,3 v=2,3
+p=7,3 v=-1,2
+p=2,4 v=2,-3
+p=9,5 v=-3,-3";
 
   protected override int Day => 14;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    var grid = new RockFormations();
+    var xBound = isTestInput ? 11 : 101;
+    var yBound = isTestInput ? 7 : 103;
+    const int steps = 100;
 
-    AddFormations(grid, input);
+    var totalTopRight = 0;
+    var totalTopLeft = 0;
+    var totalBotRight = 0;
+    var totalBotLeft = 0;
+    
+    var xHalf = xBound / 2;
+    var yHalf = yBound / 2;
 
-    var grains = 0;
-    var lowestPoint = grid.LowestPoint;
-    var canDrop = true;
-
-    while (canDrop)
+    foreach (var line in input)
     {
-      var moving = true;
-      var currentGrain = new GridPoint(500, 0);
+      var guardInit = StringUtils.ExtractIntsFromString(line, true).ToArray();
+      var xDest = (guardInit[0] + (guardInit[2] * steps)) % xBound;
+      var yDest = (guardInit[1] + (guardInit[3] * steps)) % yBound;
 
-      while (moving && canDrop)
+      if(xDest < 0) xDest += xBound;
+      if(yDest < 0) yDest += yBound;
+      
+      if (xDest < xHalf)
       {
-        //try move directly down
-        var pointBelow = new GridPoint(currentGrain.X, currentGrain.Y + 1);
-        var pointLeft = new GridPoint(currentGrain.X - 1, currentGrain.Y + 1);
-        var pointRight = new GridPoint(currentGrain.X + 1, currentGrain.Y + 1);
-        if (grid.CheckPoint(pointBelow))
+        if (yDest < yHalf)
         {
-          currentGrain = pointBelow;
+          totalTopLeft++;
         }
-        else if (grid.CheckPoint(pointLeft))
+        else if (yDest > yHalf)
         {
-          currentGrain = pointLeft;
+          totalBotLeft++;
         }
-        else if (grid.CheckPoint(pointRight))
+      }
+      else if (xDest > xHalf)
+      {
+        if (yDest < yHalf)
         {
-          currentGrain = pointRight;
+          totalTopRight++;
         }
-        else //come to rest
+        else if (yDest > yHalf)
         {
-          grid.AddPoint(currentGrain);
-          moving = false;
-          grains++;
-        }
-
-        //check if we're below the grid
-        if (currentGrain.Y > lowestPoint)
-        {
-          canDrop = false;
+          totalBotRight++;
         }
       }
     }
-
-    return grains.ToString();
+    return (totalTopLeft * totalBotLeft * totalTopRight * totalBotRight).ToString();
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    var grid = new RockFormations();
-
-    AddFormations(grid, input);
-
-    var grains = 0;
-    var lowestPoint = grid.LowestPoint;
-    var canDrop = true;
-
-    grid.AddFloor(lowestPoint + 2);
-
-    while (canDrop)
-    {
-      var moving = true;
-      var currentGrain = new GridPoint(500, 0);
-
-      while (moving && canDrop)
-      {
-        //try move directly down
-        var pointBelow = new GridPoint(currentGrain.X, currentGrain.Y + 1);
-        var pointLeft = new GridPoint(currentGrain.X - 1, currentGrain.Y + 1);
-        var pointRight = new GridPoint(currentGrain.X + 1, currentGrain.Y + 1);
-        if (grid.CheckPoint(pointBelow))
-        {
-          currentGrain = pointBelow;
-        }
-        else if (grid.CheckPoint(pointLeft))
-        {
-          currentGrain = pointLeft;
-        }
-        else if (grid.CheckPoint(pointRight))
-        {
-          currentGrain = pointRight;
-        }
-        else //come to rest
-        {
-          grid.AddPoint(currentGrain);
-          moving = false;
-          grains++;
-        }
-
-        //check if we're at the start
-        if (currentGrain.Y == 0 && currentGrain.X == 500)
-        {
-          canDrop = false;
-        }
-      }
-    }
-
-    return grains.ToString();
-  }
-
-  private string[] ParseLineToRaw(string line)
-  {
-    return line.Split(" -> ");
-  }
-
-  private void AddFormations(RockFormations grid, string[] lines)
-  {
-    foreach (var line in lines)
-    {
-      AddLine(grid, ParseLineToRaw(line));
-    }
-  }
-
-  private void AddLine(RockFormations grid, string[] points)
-  {
-    var lastPoint = ParsePoint(points[0]);
-
-    for (var i = 1; i < points.Length; i++)
-    {
-      var curPoint = ParsePoint(points[i]);
-      grid.AddPointRange(lastPoint, curPoint);
-      lastPoint = curPoint;
-    }
-  }
-
-  private GridPoint ParsePoint(string raw)
-  {
-    var parts = raw.Split(',');
-    return new GridPoint(int.Parse(parts[0]), int.Parse(parts[1]));
-  }
-
-  private class RockFormations
-  {
-    private readonly HashSet<GridPoint> _occupiedSpaces;
-    private int _floor;
-
-    public RockFormations()
-    {
-      _occupiedSpaces = new HashSet<GridPoint>();
-      LowestPoint = 0;
-      _floor = -1;
-    }
-
-    public void AddPointRange(GridPoint start, GridPoint end)
-    {
-      var startX = Math.Min(start.X, end.X);
-      var startY = Math.Min(start.Y, end.Y);
-
-      var endX = Math.Max(start.X, end.X);
-      var endY = Math.Max(start.Y, end.Y);
-
-      if (startX == endX) //vertical
-      {
-        for (var y = startY; y <= endY; y++)
-        {
-          AddPoint(new GridPoint(startX, y));
-        }
-
-        return;
-      }
-
-      if (startY == endY) //horizontal
-      {
-        for (var x = startX; x <= endX; x++)
-        {
-          AddPoint(new GridPoint(x, startY));
-        }
-
-        return;
-      }
-
-      throw new ArgumentException("can't do 3d range");
-    }
-
-    public void AddPoint(GridPoint point)
-    {
-      _occupiedSpaces.Add(point);
-
-      if (point.Y > LowestPoint)
-        LowestPoint = point.Y;
-    }
-
-    public void AddFloor(int floorLevel)
-    {
-      _floor = floorLevel;
-    }
-
-    public bool CheckPoint(GridPoint point)
-    {
-      if (_floor > 0 && point.Y >= _floor)
-      {
-        return false;
-      }
-
-      return !_occupiedSpaces.Contains(point);
-    }
-
-    public int LowestPoint { get; private set; }
+    throw new NotImplementedException();
   }
 }
