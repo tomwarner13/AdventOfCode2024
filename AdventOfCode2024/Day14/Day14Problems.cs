@@ -1,3 +1,4 @@
+using System.Text;
 using AdventOfCode2024.Util;
 
 namespace AdventOfCode2024.Day14;
@@ -70,6 +71,81 @@ p=9,5 v=-3,-3";
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    throw new NotImplementedException();
+    var xBound = isTestInput ? 11 : 101;
+    var yBound = isTestInput ? 7 : 103;
+    var permutations = xBound * yBound;
+
+    var interestingFramePrinter = new StringBuilder();
+    var guards = 
+      input.Select(line => StringUtils.ExtractIntsFromString(line, true).ToArray())
+        .Select(guardInit => 
+          new GuardInfo
+          {
+            Start = new GridPoint(guardInit[0], guardInit[1]), 
+            Velocity = new GridPoint(guardInit[2], guardInit[3])
+          }).ToList();
+
+    for (var frame = 0; frame < permutations; frame++)
+    {
+      var guardsInFrame = GenerateOneFrame(guards, frame, xBound, yBound);
+      if(IsInterestingFrame(guardsInFrame, 20))
+        PrintFrame(frame, guardsInFrame, xBound, yBound, ref interestingFramePrinter);
+    }
+
+    return interestingFramePrinter.ToString();
   }
+
+  private static HashSet<GridPoint> GenerateOneFrame(IEnumerable<GuardInfo> guards, int frame, int xBound, int yBound)
+  {
+    var guardPositions = new HashSet<GridPoint>();
+    foreach (var guard in guards)
+    {
+      var xDest = MathUtils.PositiveMod(guard.Start.X + (guard.Velocity.X * frame), xBound);
+      var yDest = MathUtils.PositiveMod(guard.Start.Y + (guard.Velocity.Y * frame), yBound);
+      
+      guardPositions.Add(new GridPoint(xDest, yDest));
+    }
+    return guardPositions;
+  }
+
+  private static bool IsInterestingFrame(HashSet<GridPoint> frame, int percentageThreshold)
+  {
+    var totalOccupied = frame.Count;
+    var totalWithAllNeighbors = 0;
+
+    foreach (var guard in frame)
+    {
+      if (GridPoint.ExtendedDirections.All(direction => IsANeighbor(guard, direction, ref frame)))
+        totalWithAllNeighbors++;
+    }
+
+    if (totalWithAllNeighbors == 0) return false;
+    return (totalOccupied * 100) / totalWithAllNeighbors > percentageThreshold;
+  }
+
+  private static bool IsANeighbor(GridPoint guard, GridPoint direction, ref HashSet<GridPoint> frame)
+  {
+    return frame.Contains(guard + direction);
+  }
+
+  private static void PrintFrame(int frame, HashSet<GridPoint> occupiedPositions, int xBound, int yBound,
+    ref StringBuilder printer)
+  {
+    printer.AppendLine();
+    printer.AppendLine($"FRAME {frame}");
+    for (var y = 0; y < yBound; y++)
+    {
+      for (var x = 0; x < xBound; x++)
+      {
+        printer.Append(occupiedPositions.Contains(new GridPoint(x, y)) ? '#' : '.');
+      }
+      printer.AppendLine();
+    }
+  }
+
+  private struct GuardInfo
+  {
+    public GridPoint Start;
+    public GridPoint Velocity;
+  };
 }
