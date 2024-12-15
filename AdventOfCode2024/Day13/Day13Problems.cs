@@ -21,47 +21,6 @@ Button A: X+69, Y+23
 Button B: X+27, Y+71
 Prize: X=18641, Y=10279";
 
-//   protected override string TestInput =>
-//     @"3 5
-// 5 3
-// 8 8
-//
-// 10 10 #fails, tries wrong increments
-// 4 8
-// 100 100
-//
-// 12 2
-// 6 7
-// 18 9
-//
-// 3 5
-// 5 3
-// 64 64
-//
-// Button A: X+94, Y+34 # should be 80, 40
-// Button B: X+22, Y+67
-// Prize: X=8400, Y=5400
-//
-// Button A: X+17, Y+86 # should be 38, 86
-// Button B: X+84, Y+37
-// Prize: X=7870, Y=6450
-//
-// 1 1
-// 2 2 
-// 1 1
-//
-// 0 1
-// 0 1
-// 0 2
-//
-// 1 1
-// 1 0
-// 2 2
-//
-// 0 1
-// 0 7
-// 1 8";
-
   protected override int Day => 13;
 
   protected override string Problem1(string[] input, bool isTestInput)
