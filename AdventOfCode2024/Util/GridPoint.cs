@@ -62,6 +62,16 @@ public struct GridPoint : IEquatable<GridPoint>
   {
     return new GridPoint(a.X - b.X, a.Y - b.Y);
   }
+  
+  public static GridPoint operator *(GridPoint a, int b)
+  {
+    return new GridPoint(a.X * b, a.Y * b);
+  }
+  
+  public static GridPoint operator /(GridPoint a, int b)
+  {
+    return new GridPoint(a.X / b, a.Y / b);
+  }
 
   public override string ToString() => $"{X}:{Y}";
 
