@@ -1,5 +1,7 @@
 ﻿namespace AdventOfCode2024.Util;
 
+//TODO refactor this to not be all readonly so i'm not allocating a new one every time some mf reindeer or whatever 
+//steps one place to the left
 public struct GridPoint : IEquatable<GridPoint>
 {
   public readonly int X;
@@ -103,5 +105,14 @@ public struct GridPoint : IEquatable<GridPoint>
     UpLeft,
     DownRight,
     DownLeft
+  };
+
+  public static GridPoint GetDirectionPoint(Direction direction) => direction switch
+  {
+    Direction.Up => Up,
+    Direction.Down => Down,
+    Direction.Right => Right,
+    Direction.Left => Left,
+    _ => throw new ThisShouldNeverHappenException(nameof(direction))
   };
 }
