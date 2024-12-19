@@ -1,9 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using AdventOfCode2024.Day18;
+using AdventOfCode2024.Day19;
 using AdventOfCode2024.Util;
 
-var problems = new Day18Problems();
+//TODO FOR 2025: refactor Problems to pass in a StringBuilder to each problem and then just print the result; that allows 
+//much easier debugging by print statements when necessary
+var problems = new Day19Problems();
 DoAllProblems(problems);
 return;
 

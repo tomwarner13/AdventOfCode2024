@@ -116,4 +116,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\problemgen.sh">
+      <Link>problemgen.sh</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>
