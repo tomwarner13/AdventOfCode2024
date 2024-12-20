@@ -50,6 +50,7 @@ public class Day20Problems : Problems
     
     var route = GetRouteAndDistances(startPoint, endPoint, emptyPoints);
     Debug($"route found: {route.Count}");
+    Debug($"empty points: {emptyPoints.Count}");
 
     var pointsToCheck = route
       .Where(p => p.Value + 2 + minimumCheatThreshold < route.Count)
@@ -85,8 +86,85 @@ public class Day20Problems : Problems
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
-  {    
-    throw new NotImplementedException();
+  {
+    var startPoint = new GridPoint();
+    var endPoint = new GridPoint();
+    var emptyPoints = new HashSet<GridPoint>();
+    //var minimumCheatThreshold = isTestInput ? 10 : 100;
+    var minimumCheatThreshold = isTestInput ? 72 : 100; //with test input, we should see 29 cheats over threshold
+    
+    var xBound = input[0].Length;
+    var yBound = input.Length;
+    
+    DebugMode = isTestInput;
+
+    StringUtils.ReadInputGrid(input, (c, x, y) =>
+    {
+      if (c != '#')
+      {
+        var point = new GridPoint(x, y);
+        emptyPoints.Add(point);
+        switch (c)
+        {
+          case 'S':
+            startPoint = point;
+            break;
+          case 'E':
+            endPoint = point;
+            break;
+        }
+      }
+    });
+    
+    var route = GetRouteAndDistances(startPoint, endPoint, emptyPoints);
+    
+    //var picosecondCheatTime = isTestInput ? 2 : 20;
+    const int picosecondCheatTime = 20;
+    
+    //have confirmed that no empty points not on route
+    //so don't have to handle case of a cheat jumping to an off-route point and completing from there
+    
+    var pointsToCheck = route
+      .Where(p => p.Value + 2 + minimumCheatThreshold < route.Count)
+      .OrderBy(p => p.Value);
+
+    var cheatPointsFound = 0;
+    var visitedPoints = new HashSet<GridPoint>();
+    
+    foreach (var point in pointsToCheck)
+    {
+      var minX = Math.Max(point.Key.X - picosecondCheatTime, 1);
+      
+      var maxX = Math.Min(point.Key.X + picosecondCheatTime, xBound - 2);
+
+      for (var x = minX; x <= maxX; x++)
+      {
+        var absX = Math.Abs(point.Key.X - x);
+        var minY = Math.Max(point.Key.Y + absX - picosecondCheatTime, 1);
+        var maxY = Math.Min(point.Key.Y + picosecondCheatTime - absX, yBound - 2);
+        
+        for (var y = minY; y <= maxY; y++)
+        {
+          if(x == point.Key.X && y == point.Key.Y) continue;
+          var dest = new GridPoint(x, y);
+          if (!visitedPoints.Contains(dest) && route.TryGetValue(dest, out var destDistance))
+          {
+            var jumpDist = point.Key.MeasureStepwiseDistance(dest);
+            var cheatDist = destDistance - point.Value - jumpDist;
+            //Debug($"Found jump: from {point.Key}:{point.Value} to {dest}:{destDistance} | {cheatDist}");
+            if (cheatDist >= minimumCheatThreshold)
+            {
+              Debug($"adding above as point: cheatDist: {cheatDist}");
+              cheatPointsFound++;
+            }
+          }
+        }
+      }
+      
+      visitedPoints.Add(point.Key);
+    }
+
+    return cheatPointsFound.ToString();
   }
 
   //dijkstra running (perfectly path-optimized) victory laps out here

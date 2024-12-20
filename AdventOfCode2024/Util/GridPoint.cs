@@ -75,6 +75,16 @@ public struct GridPoint : IEquatable<GridPoint>
     return new GridPoint(a.X / b, a.Y / b);
   }
 
+  public static int MeasureStepwiseDistance(GridPoint a, GridPoint b)
+  {
+    return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+  }
+  
+  public int MeasureStepwiseDistance(GridPoint other)
+  {
+    return MeasureStepwiseDistance(this, other);
+  }
+
   public override string ToString() => $"{X}:{Y}";
 
   public static readonly GridPoint Up = new(0, -1);
