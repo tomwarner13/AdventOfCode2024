@@ -29,17 +29,13 @@ public class Day2Problems : Problems
   protected override string Problem2(string[] input, bool isTestInput)
   {
     var safeReports = 0;
-    var reportedSafeLines = new StringBuilder();
     foreach (var line in input)
     {
       var report = StringUtils.ExtractIntsFromString(line).ToArray();
       if (IsReportSafeWithDampener(report))
-      {
         safeReports++;
-        reportedSafeLines.AppendLine(line);
-      }
     }
-    return safeReports.ToString() + '\n' + reportedSafeLines;
+    return safeReports.ToString();
   }
 
   private static bool IsReportSafe(int[] report)

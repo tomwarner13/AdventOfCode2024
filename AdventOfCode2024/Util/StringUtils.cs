@@ -27,4 +27,16 @@ public static class StringUtils
     var matches = RegexUtils.BasicWordRegex.Matches(input);
     return matches.Select(s => s.ToString());
   }
+  
+  public static void ReadInputGrid(string[] input, Action<char, int, int> reader)
+  {
+    for (var y = 0; y < input.Length; y++)
+    {
+      for (var x = 0; x < input.Length; x++)
+      {
+        var c = input[y][x];
+        reader(c, x, y);
+      }
+    }
+  }
 }

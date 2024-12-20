@@ -2,11 +2,13 @@
 
 public abstract class Problems
 {
+  //TODO refactor to be an array of strings (each can be split to lines on \n) and live in a partial class in its own file
   protected abstract string TestInput { get; }
 
   private string FullInputFilePath => $"Day{Day}\\D{Day}.txt";
 
   protected abstract int Day { get; }
+  protected bool DebugMode = false;
 
   protected abstract string Problem1(string[] input, bool isTestInput);
   protected abstract string Problem2(string[] input, bool isTestInput);
@@ -33,5 +35,19 @@ public abstract class Problems
   {
     var lines = File.ReadAllLines(FullInputFilePath);
     return Problem2(lines, false);
+  }
+
+  protected void Debug(string message, bool appendNewLine = true)
+  {
+    if (!DebugMode) return;
+    if(appendNewLine) Console.WriteLine(message);
+    else Console.Write(message);
+  }
+  
+  protected void Debug(object? obj, bool appendNewLine = true)
+  {
+    if (!DebugMode) return;
+    if(appendNewLine) Console.WriteLine(obj?.ToString() ?? "nUlL");
+    else Console.Write(obj?.ToString() ?? "nUlL");
   }
 }
