@@ -168,6 +168,7 @@ public class Day20Problems : Problems
   }
 
   //dijkstra running (perfectly path-optimized) victory laps out here
+  //EDIT this could have been a for-loop lmao there's exactly one path and it includes every point with no branches
   private static Dictionary<GridPoint, int> GetRouteAndDistances(GridPoint start, GridPoint end,
     HashSet<GridPoint> emptyPoints)
   {
