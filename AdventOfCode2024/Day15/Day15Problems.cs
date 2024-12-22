@@ -71,7 +71,8 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^";
           '^' => GridPoint.Up,
           'v' => GridPoint.Down,
           '>' => GridPoint.Right,
-          '<' => GridPoint.Left
+          '<' => GridPoint.Left,
+          _ => throw new ThisShouldNeverHappenException()
         };
         AttemptOneMove(ref robotPos, ref walls, ref boxes, dir);
       }
@@ -143,7 +144,8 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^";
           '^' => GridPoint.Up,
           'v' => GridPoint.Down,
           '>' => GridPoint.Right,
-          '<' => GridPoint.Left
+          '<' => GridPoint.Left,
+          _ => throw new ThisShouldNeverHappenException()
         };
         if(isTestInput && frame < maxFrames) PrintFrame(frame, lastMove, walls, boxes, robotPos, xBound, yBound, ref printer);
         AttemptOneMoveWithDoubleWideBoxes(ref robotPos, ref walls, ref boxes, dir);

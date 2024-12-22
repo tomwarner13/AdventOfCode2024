@@ -16,7 +16,7 @@ public struct HeadingInfo : IEquatable<HeadingInfo>
     return Direction == other.Direction && Position == other.Position;
   }
 
-  public override bool Equals(object obj)
+  public override bool Equals(object? obj)
   {
     return obj is HeadingInfo other && Equals(other);
   }

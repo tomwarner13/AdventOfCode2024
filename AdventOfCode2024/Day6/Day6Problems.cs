@@ -135,6 +135,7 @@ public class Day6Problems : Problems
       Direction.Right => new GridPoint(loc.X + 1, loc.Y),
       Direction.Down => new GridPoint(loc.X, loc.Y + 1),
       Direction.Left => new GridPoint(loc.X - 1, loc.Y),
+      _ => throw new ThisShouldNeverHappenException()
     };
 
     if (obstacles.Contains(nextPos)) // turn right instead
@@ -144,7 +145,8 @@ public class Day6Problems : Problems
         Direction.Up => Direction.Right,
         Direction.Right => Direction.Down,
         Direction.Down => Direction.Left,
-        Direction.Left => Direction.Up
+        Direction.Left => Direction.Up,
+        _ => throw new ThisShouldNeverHappenException()
       };
 
       return new HeadingInfo(nextDir, loc);

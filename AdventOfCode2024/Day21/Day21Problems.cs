@@ -145,11 +145,9 @@ public partial class Day21Problems : Problems
           if (_locationPointer == _panicPoint) throw new ThisShouldNeverHappenException("panic!!");
           if (avoidingPanic == null)
           {
-            if((_locationPointer.Y == _panicPoint.Y && dest.X == 0) //this would bring us left to pp
-              || (_locationPointer.X == 0 && dest.Y == _panicPoint.Y)) //this would bring us vert to pp
-              avoidingPanic = true;
-            else
-              avoidingPanic = false;
+            avoidingPanic = 
+              (_locationPointer.Y == _panicPoint.Y && dest.X == 0) //this would bring us left to pp
+               || (_locationPointer.X == 0 && dest.Y == _panicPoint.Y); //this would bring us vert to pp
           }
 
           if (avoidingPanic ?? throw new ThisShouldNeverHappenException("waaaat"))
@@ -208,10 +206,6 @@ public partial class Day21Problems : Problems
               throw new ThisShouldNeverHappenException("math no worky!!");
             }
           }
-          
-          
-          //precedence: left -> vert -> right
-
         }
         sb.Append('A');
       }
