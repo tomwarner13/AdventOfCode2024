@@ -4,8 +4,8 @@
 //steps one place to the left
 public struct GridPoint : IEquatable<GridPoint>
 {
-  public readonly int X;
-  public readonly int Y;
+  public int X;
+  public int Y;
 
   public GridPoint(int x, int y)
   {
@@ -73,6 +73,18 @@ public struct GridPoint : IEquatable<GridPoint>
   public static GridPoint operator /(GridPoint a, int b)
   {
     return new GridPoint(a.X / b, a.Y / b);
+  }
+
+  public void PlusEquals(GridPoint other)
+  {
+    X += other.X;
+    Y += other.Y;
+  }
+  
+  public void MinusEquals(GridPoint other)
+  {
+    X -= other.X;
+    Y -= other.Y;
   }
 
   public static int MeasureStepwiseDistance(GridPoint a, GridPoint b)

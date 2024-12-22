@@ -37,14 +37,34 @@ public abstract class Problems
     return Problem2(lines, false);
   }
 
-  protected void Debug(string message, bool appendNewLine = true)
+  /// <summary>
+  /// D for Debug
+  /// </summary>
+  /// <param name="message"></param>
+  /// <param name="appendNewLine"></param>
+  protected void D()
+  {
+    if (DebugMode) Console.WriteLine();
+  }
+  
+  /// <summary>
+  /// D for Debug
+  /// </summary>
+  /// <param name="message"></param>
+  /// <param name="appendNewLine"></param>
+  protected void D(string message, bool appendNewLine = true)
   {
     if (!DebugMode) return;
     if(appendNewLine) Console.WriteLine(message);
     else Console.Write(message);
   }
   
-  protected void Debug(object? obj, bool appendNewLine = true)
+  /// <summary>
+  /// D for Debug
+  /// </summary>
+  /// <param name="message"></param>
+  /// <param name="appendNewLine"></param>
+  protected void D(object? obj, bool appendNewLine = true)
   {
     if (!DebugMode) return;
     if(appendNewLine) Console.WriteLine(obj?.ToString() ?? "nUlL");

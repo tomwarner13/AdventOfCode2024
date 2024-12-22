@@ -28,15 +28,28 @@ public static class StringUtils
     return matches.Select(s => s.ToString());
   }
   
+  /// <summary>
+  /// pass in (c, x, y)
+  /// </summary>
+  /// <param name="input"></param>
+  /// <param name="reader">c, x, y</param>
   public static void ReadInputGrid(string[] input, Action<char, int, int> reader)
   {
     for (var y = 0; y < input.Length; y++)
     {
-      for (var x = 0; x < input.Length; x++)
+      for (var x = 0; x < input[0].Length; x++)
       {
         var c = input[y][x];
         reader(c, x, y);
       }
     }
   }
+  
+  /// <summary>
+  /// pass in (c, x, y)
+  /// </summary>
+  /// <param name="input">will be string.split on newlines</param>
+  /// <param name="reader">c, x, y</param>
+  public static void ReadInputGrid(string input, Action<char, int, int> reader)
+    => ReadInputGrid(input.Split('\n'), reader);
 }

@@ -49,8 +49,8 @@ public class Day20Problems : Problems
     });
     
     var route = GetRouteAndDistances(startPoint, endPoint, emptyPoints);
-    Debug($"route found: {route.Count}");
-    Debug($"empty points: {emptyPoints.Count}");
+    D($"route found: {route.Count}");
+    D($"empty points: {emptyPoints.Count}");
 
     var pointsToCheck = route
       .Where(p => p.Value + 2 + minimumCheatThreshold < route.Count)
@@ -69,11 +69,11 @@ public class Day20Problems : Problems
           var dest = neighbor + direction;
           if (!visitedPoints.Contains(dest) && route.TryGetValue(dest, out var jumpDistance))
           {
-            Debug($"Found jump: from {point.Key}:{point.Value} to {dest}:{jumpDistance}");
+            D($"Found jump: from {point.Key}:{point.Value} to {dest}:{jumpDistance}");
             var cheatDist = jumpDistance - point.Value - 2;
             if (cheatDist >= minimumCheatThreshold)
             {
-              Debug($"adding above as point: cheatDist: {cheatDist}");
+              D($"adding above as point: cheatDist: {cheatDist}");
               cheatPointsFound++;
             }
           }
@@ -154,7 +154,7 @@ public class Day20Problems : Problems
             //Debug($"Found jump: from {point.Key}:{point.Value} to {dest}:{destDistance} | {cheatDist}");
             if (cheatDist >= minimumCheatThreshold)
             {
-              Debug($"adding above as point: cheatDist: {cheatDist}");
+              D($"adding above as point: cheatDist: {cheatDist}");
               cheatPointsFound++;
             }
           }
