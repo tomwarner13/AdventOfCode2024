@@ -77,13 +77,37 @@ td-yn";
 
   protected override string Problem2(string[] input, bool isTestInput)
   {
-    //just do some mf recursion here
-    //for each point in map, go through its connections -- confirm recursively that each one is a)
-    //  not already in set (so we don't get stuck in a -> b -> a loop) and connected to every computer in set
-    //  fail (return existing points) as soon as a computer is found without connection to all. bubbling up,
-    //  return longest series of points.
+    DebugMode = isTestInput;
+    var map = new Dictionary<string, HashSet<string>>();
     
-    throw new NotImplementedException();
+    foreach (var line in input)
+    {
+      var points = line.Split('-');
+      for (var i = 0; i < 2; i++ )
+      {
+        var point = points[i];
+        var other = points[i == 0 ? 1 : 0];
+        
+        if (map.TryGetValue(point, out var connections)) connections.Add(other);
+        else map[point] = [other];
+      }
+    }
+    
+    HashSet<string> largestLanParty = [];
+
+    foreach (var comp in map
+               .OrderBy(c => c.Key))
+    {
+      var party = GetLargestParty(comp.Key, [], ref map);
+      if (party.Count > largestLanParty.Count)
+      {
+        var pwd = isTestInput ? MakeIntoPassword(party) : string.Empty;
+        D($"found largest party: {pwd}");
+        largestLanParty = party;
+      }
+    }
+    
+    return MakeIntoPassword(largestLanParty);
   }
 
   private static string MakeSortedKey(string p1, string p2, string p3)
@@ -91,5 +115,38 @@ td-yn";
     var arr = new[] { p1, p2, p3 };
     Array.Sort(arr);
     return string.Join("|", arr);
+  }
+
+  //quick-and-dirty pruning to avoid combinatorial explosion: only considering neighbors in lower order
+  //if we call this with visited: {A, B, C} and D as start,
+  //it should check if D has conns to all 3, then if so, recurse with {A, B, C, D} to each of D's higher-order neighbors
+  private static HashSet<string> GetLargestParty(string startNode, HashSet<string> visitedNodes,
+    ref Dictionary<string, HashSet<string>> map)
+  {
+    var neighbors = map[startNode];
+    if (visitedNodes.All(n => neighbors.Contains(n)))
+    {
+      var newVisited = new HashSet<string>(visitedNodes) { startNode };
+      var bestResult = newVisited;
+
+      foreach (var neighbor in neighbors
+                 .Where(n => string.CompareOrdinal(n, startNode) > 0
+                             && !newVisited.Contains(n)))
+      {
+        var testResult = GetLargestParty(neighbor, newVisited, ref map);
+        if(testResult.Count > bestResult.Count) bestResult = testResult;
+      }
+      
+      return bestResult;
+    }
+
+    return [];
+  }
+
+  private static string MakeIntoPassword(HashSet<string> party)
+  {
+    var partyList = party.ToList();
+    partyList.Sort();
+    return string.Join(',', partyList);
   }
 }
