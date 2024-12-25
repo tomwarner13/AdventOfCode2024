@@ -94,8 +94,8 @@ public class Day25Problems : Problems
   }
 
   protected override string Problem2(string[] input, bool isTestInput)
-  {    
-    throw new NotImplementedException();
+  {
+    return "Merry Christmas!! Not having to do a Problem 2 today is a present in itself";
   }
 
   private static bool CompareLockAndKey(int[] testLock, int[] testKey)
