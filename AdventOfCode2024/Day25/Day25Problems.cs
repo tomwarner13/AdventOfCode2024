@@ -5,73 +5,103 @@ namespace AdventOfCode2024.Day25;
 
 public class Day25Problems : Problems
 {
-  protected override string TestInput => @"";
+  protected override string TestInput => @"#####
+.####
+.####
+.####
+.#.#.
+.#...
+.....
+
+#####
+##.##
+.#.##
+...##
+...#.
+...#.
+.....
+
+.....
+#....
+#....
+#...#
+#.#.#
+#.###
+#####
+
+.....
+.....
+#.#..
+###..
+###.#
+###.#
+#####
+
+.....
+.....
+.....
+#....
+#.#..
+#.#.#
+#####";
 
   protected override int Day => 25;
 
   protected override string Problem1(string[] input, bool isTestInput)
   {
-    var output = new StringBuilder();
-    var currentPositionsToReplace = new HashSet<int>();
-    var futurePositionsToReplace = new HashSet<int>();
-    
-    for (var i = 0; i < input.Length; i++)
+    var locks = new List<int[]>();
+    var keys = new List<int[]>();
+
+    for (var baseIndex = 0; baseIndex < input.Length; baseIndex += 8)
     {
-      var line = input[i];
-      
-      if (IsTabLine(line))
+      //check if lock or key
+      if (input[baseIndex][0] == '#') //lock
       {
-        for (var j = 0; j < line.Length; j++)
+        var buildingLock = new int[5];
+        Array.Fill(buildingLock, 5);
+        for (var height = 0; height <= 5; height++)
         {
-          if (currentPositionsToReplace.Contains(j))
+          for (var pin = 0; pin < 5; pin++)
           {
-            output.Append('4');
-          }
-          else
-          {
-            var c = line[j];
-            switch (c)
-            {
-              case '1':
-                output.Append('0');
-                break;
-              case '2':
-                output.Append('1');
-                break;
-              case '3':
-                output.Append('2');
-                break;
-              case '4':
-                output.Append('3');
-                break;
-              case '0':
-                output.Append('-');
-                futurePositionsToReplace.Add(j);
-                break;
-              default:
-                output.Append(c);
-                break;
-            }
+            if(input[baseIndex + height + 1][pin] == '.')
+              buildingLock[pin] = Math.Min(buildingLock[pin], height);
           }
         }
-
-        currentPositionsToReplace = futurePositionsToReplace;
-        futurePositionsToReplace = new HashSet<int>();
-        output.AppendLine();
+        locks.Add(buildingLock);
       }
-      else
+      else //key
       {
-        output.AppendLine(line);
+        var buildingKey = new int[5];
+        Array.Fill(buildingKey, 5);
+        for (var height = 0; height <= 5; height++)
+        {
+          for (var pin = 0; pin < 5; pin++)
+          {
+            if(input[baseIndex + 5 - height][pin] == '.')
+              buildingKey[pin] = Math.Min(buildingKey[pin], height);
+          }
+        }
+        keys.Add(buildingKey); //check if i work on keys
       }
     }
 
-    return output.ToString();
+    var totalMatches = 0;
+    foreach (var key in keys)
+      foreach (var loch in locks) //lock is a keyword lmao
+        if(CompareLockAndKey(key, loch)) totalMatches++;
+    
+    return totalMatches.ToString();
   }
-
-  private static bool IsTabLine(string line) => line.Contains('|');
 
   protected override string Problem2(string[] input, bool isTestInput)
   {    
     throw new NotImplementedException();
+  }
+
+  private static bool CompareLockAndKey(int[] testLock, int[] testKey)
+  {
+    for(var i = 0; i < 5; i++)
+      if(testLock[i] + testKey[i] > 5) return false;
+    return true;
   }
 }
