@@ -1,7 +1,5 @@
 ﻿namespace AdventOfCode2024.Util;
 
-//TODO refactor this to not be all readonly so i'm not allocating a new one every time some mf reindeer or whatever 
-//steps one place to the left
 public struct GridPoint : IEquatable<GridPoint>
 {
   public int X;
